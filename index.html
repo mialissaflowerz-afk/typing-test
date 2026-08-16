@@ -84,6 +84,14 @@
             color: #b91c1c;
         }
         
+        .bg-livex-navy {
+            background-color: #0f172a; /* Dark navy blue */
+        }
+        
+        .text-livex-navy {
+            color: #0f172a;
+        }
+        
         /* Blur effect for when test is unfocused */
         .blur-filter {
             filter: blur(4px);
@@ -112,11 +120,11 @@
 
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased bg-slate-50">
 
-<header class="w-full py-6 bg-white shadow-sm flex justify-center items-center">
+<header class="w-full py-6 bg-white shadow-sm flex justify-center items-center border-b-4 border-livex-navy">
     <!-- Branding Logo -->
-    <img src="livex solutions.png" alt="Livex Solutions Logo" class="h-24 md:h-32 object-contain" onerror="this.src='https://placehold.co/300x100/ffffff/b91c1c?text=Livex+Solutions';">
+    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEj1ycAZVoAXXwxN3m0ej-Dp25bZvDmiiBkkbRPCjKyN47PiE5-dt5fa32FoSbSq_2KHLpF-ky7RrsRJm_2FHwBMUZPOJO02SkX62-ntFchReVT2GIPyN_SSKDLOLlcjwF8oASYcm8rIBa6hjJcU_ZZmNjaxkvMDRAfrDl9Scyn7k27MvuoVC3IyUP_G__Be=s500" alt="Livex Solutions Logo" class="h-24 md:h-32 object-contain" onerror="this.src='https://placehold.co/300x100/0f172a/ffffff?text=Livex+Solutions';">
 </header>
 
 <main class="flex-grow flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-5xl mx-auto">
@@ -135,16 +143,16 @@
         <!-- Real-time Stats Display -->
         <div class="flex space-x-6 text-slate-700 font-mono text-lg">
             <div class="flex flex-col items-center">
-                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans">Time</span>
+                <span class="text-xs text-livex-navy font-bold uppercase tracking-wider font-sans">Time</span>
                 <span id="time-display" class="font-bold text-livex-red text-2xl">01:00</span>
             </div>
             <div class="flex flex-col items-center">
-                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans">WPM</span>
-                <span id="wpm-display" class="font-bold text-2xl">0</span>
+                <span class="text-xs text-livex-navy font-bold uppercase tracking-wider font-sans">WPM</span>
+                <span id="wpm-display" class="font-bold text-2xl text-slate-800">0</span>
             </div>
              <div class="flex flex-col items-center">
-                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans">Accuracy</span>
-                <span id="acc-display" class="font-bold text-2xl">100%</span>
+                <span class="text-xs text-livex-navy font-bold uppercase tracking-wider font-sans">Accuracy</span>
+                <span id="acc-display" class="font-bold text-2xl text-slate-800">100%</span>
             </div>
         </div>
     </div>
@@ -174,7 +182,7 @@
 
     <!-- Controls -->
     <div class="mt-8 flex justify-center w-full">
-        <button id="restart-btn" class="flex items-center space-x-2 px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full font-medium transition-colors shadow-sm">
+        <button id="restart-btn" class="flex items-center space-x-2 px-6 py-3 bg-livex-navy hover:bg-slate-800 text-white rounded-full font-medium transition-colors shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
             </svg>
@@ -185,11 +193,11 @@
 </main>
 
 <!-- Results Modal (Hidden by default) -->
-<div id="results-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300" id="results-content">
+<div id="results-modal" class="fixed inset-0 bg-livex-navy bg-opacity-80 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300 border-t-8 border-livex-red" id="results-content">
         <div class="text-center mb-6">
-            <img src="livex solutions.png" alt="Livex Solutions" class="h-16 mx-auto mb-4 object-contain">
-            <h2 class="text-3xl font-bold text-slate-800">Test Complete!</h2>
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEj1ycAZVoAXXwxN3m0ej-Dp25bZvDmiiBkkbRPCjKyN47PiE5-dt5fa32FoSbSq_2KHLpF-ky7RrsRJm_2FHwBMUZPOJO02SkX62-ntFchReVT2GIPyN_SSKDLOLlcjwF8oASYcm8rIBa6hjJcU_ZZmNjaxkvMDRAfrDl9Scyn7k27MvuoVC3IyUP_G__Be=s500" alt="Livex Solutions" class="h-16 mx-auto mb-4 object-contain">
+            <h2 class="text-3xl font-bold text-livex-navy">Test Complete!</h2>
             <p class="text-slate-500 mt-1" id="final-time-text">1 Minute Test</p>
         </div>
 
@@ -202,17 +210,17 @@
             <div class="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
                 <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-1">Accuracy</p>
                 <p class="text-4xl font-bold text-slate-800" id="final-acc">0%</p>
-                <p class="text-xs text-slate-400 mt-1">Keystrokes</p>
+                <p class="text-xs text-slate-400 mt-1">Overall</p>
             </div>
         </div>
 
         <div class="space-y-2 mb-8 text-sm text-slate-600">
             <div class="flex justify-between border-b border-slate-100 pb-2">
-                <span>Correct Keystrokes</span>
+                <span>Correct Characters</span>
                 <span class="font-medium text-green-600" id="final-correct-chars">0</span>
             </div>
             <div class="flex justify-between border-b border-slate-100 pb-2">
-                <span>Incorrect Keystrokes</span>
+                <span>Incorrect Characters</span>
                 <span class="font-medium text-red-600" id="final-incorrect-chars">0</span>
             </div>
         </div>
@@ -354,13 +362,16 @@
 
         totalKeystrokes++;
 
-        // Check if typed character matches expected
-        if (e.key === expectedChar) {
+        // Determine if the input matches
+        // Explicitly handle spacebar as it might come in as " " or "Spacebar" depending on older browsers, though " " is standard.
+        const inputKey = e.key;
+
+        if (inputKey === expectedChar) {
             currentCharElement.classList.add('correct');
             currentCharElement.classList.remove('incorrect', 'current-char');
             correctChars++;
         } else {
-            // Visual feedback for space
+            // Visual feedback for space errors
             if (expectedChar === ' ') {
                  currentCharElement.style.backgroundColor = '#fee2e2'; // Light red bg
             }
@@ -532,15 +543,17 @@
     // Mobile Input via hidden field
     hiddenInput.addEventListener('input', (e) => {
          // The hidden input receives the whole string, we just want the last char
-         // It's trickier on mobile due to autocomplete/autocorrect.
-         // We'll simulate keydown for simplicity
+         // Need to handle spaces correctly from input events
          const val = hiddenInput.value;
+         
+         // If length increased, a character was typed
          if (val.length > 0) {
              const lastChar = val[val.length - 1];
              const mockEvent = { key: lastChar, preventDefault: ()=>{} };
              handleTyping(mockEvent);
-             // Clear it to keep it clean
-             setTimeout(() => hiddenInput.value = "", 10);
+             
+             // Keep input clean but don't lose focus
+             hiddenInput.value = ""; 
          }
     });
     
