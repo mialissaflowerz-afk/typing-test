@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livex Solutions Typing Test</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the typing test */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light slate background */
+            color: #334155;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .typing-area {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            letter-spacing: 0.05em;
+            position: relative;
+            user-select: none; /* Prevent selecting the text directly */
+        }
+
+        /* Styles for individual characters as they are typed */
+        .char {
+            color: #94a3b8; /* Default light gray for untyped */
+            transition: color 0.1s ease, background-color 0.1s ease;
+            position: relative;
+        }
+
+        .char.correct {
+            color: #0f172a; /* Dark text for correct */
+        }
+
+        .char.incorrect {
+            color: #ef4444; /* Red for incorrect */
+            background-color: #fee2e2;
+            border-radius: 2px;
+        }
+
+        /* The blinking cursor */
+        .char.current-char {
+            color: #0f172a;
+        }
+        
+        .char.current-char::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 10%;
+            bottom: 10%;
+            width: 2px;
+            background-color: #ef4444; /* Red cursor to match logo accent */
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Hidden input field to capture keystrokes, even on mobile */
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Branding colors based on the logo */
+        .bg-livex-red {
+            background-color: #b91c1c; /* Approximate red from logo */
+        }
+        .text-livex-red {
+            color: #b91c1c;
+        }
+        
+        /* Blur effect for when test is unfocused */
+        .blur-filter {
+            filter: blur(4px);
+            transition: filter 0.2s ease;
+        }
+        
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 10;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .is-unfocused .overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+<header class="w-full py-6 bg-white shadow-sm flex justify-center items-center">
+    <!-- Branding Logo -->
+    <img src="livex solutions.png" alt="Livex Solutions Logo" class="h-24 md:h-32 object-contain" onerror="this.src='https://placehold.co/300x100/ffffff/b91c1c?text=Livex+Solutions';">
+</header>
+
+<main class="flex-grow flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-5xl mx-auto">
+    
+    <!-- Header info: Settings and Stats -->
+    <div class="w-full flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        
+        <!-- Time Selection Buttons -->
+        <div class="flex space-x-2 bg-white rounded-lg shadow-sm p-1 border border-slate-200" id="time-selectors">
+            <button class="time-btn px-4 py-2 rounded-md text-sm font-medium transition-colors bg-livex-red text-white" data-time="60">1 Min</button>
+            <button class="time-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100" data-time="120">2 Min</button>
+            <button class="time-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100" data-time="180">3 Min</button>
+            <button class="time-btn px-4 py-2 rounded-md text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100" data-time="300">5 Min</button>
+        </div>
+
+        <!-- Real-time Stats Display -->
+        <div class="flex space-x-6 text-slate-700 font-mono text-lg">
+            <div class="flex flex-col items-center">
+                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans">Time</span>
+                <span id="time-display" class="font-bold text-livex-red text-2xl">01:00</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans">WPM</span>
+                <span id="wpm-display" class="font-bold text-2xl">0</span>
+            </div>
+             <div class="flex flex-col items-center">
+                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans">Accuracy</span>
+                <span id="acc-display" class="font-bold text-2xl">100%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Main Typing Area Container -->
+    <div class="w-full relative">
+        <div id="test-container" class="w-full bg-white rounded-xl shadow-md p-6 md:p-10 border border-slate-100 relative overflow-hidden focus:outline-none transition-all" tabindex="0">
+            
+            <!-- Overlay shown when test loses focus -->
+            <div class="overlay flex-col" id="focus-overlay">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-livex-red mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <p class="text-lg font-medium text-slate-700">Click or tap here to focus</p>
+            </div>
+
+            <!-- The text to be typed -->
+            <div id="quote-display" class="typing-area h-48 overflow-hidden">
+                <!-- Text characters will be injected here via JS -->
+            </div>
+        </div>
+
+        <!-- Hidden input for mobile keyboard support and capturing general typing -->
+        <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+
+    <!-- Controls -->
+    <div class="mt-8 flex justify-center w-full">
+        <button id="restart-btn" class="flex items-center space-x-2 px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full font-medium transition-colors shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+            <span>Restart Test</span>
+        </button>
+    </div>
+
+</main>
+
+<!-- Results Modal (Hidden by default) -->
+<div id="results-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300" id="results-content">
+        <div class="text-center mb-6">
+            <img src="livex solutions.png" alt="Livex Solutions" class="h-16 mx-auto mb-4 object-contain">
+            <h2 class="text-3xl font-bold text-slate-800">Test Complete!</h2>
+            <p class="text-slate-500 mt-1" id="final-time-text">1 Minute Test</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
+                <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-1">Speed</p>
+                <p class="text-4xl font-bold text-livex-red" id="final-wpm">0</p>
+                <p class="text-xs text-slate-400 mt-1">WPM</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
+                <p class="text-sm text-slate-500 uppercase tracking-wide font-semibold mb-1">Accuracy</p>
+                <p class="text-4xl font-bold text-slate-800" id="final-acc">0%</p>
+                <p class="text-xs text-slate-400 mt-1">Keystrokes</p>
+            </div>
+        </div>
+
+        <div class="space-y-2 mb-8 text-sm text-slate-600">
+            <div class="flex justify-between border-b border-slate-100 pb-2">
+                <span>Correct Keystrokes</span>
+                <span class="font-medium text-green-600" id="final-correct-chars">0</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-100 pb-2">
+                <span>Incorrect Keystrokes</span>
+                <span class="font-medium text-red-600" id="final-incorrect-chars">0</span>
+            </div>
+        </div>
+
+        <button id="close-modal-btn" class="w-full py-3 bg-livex-red hover:bg-red-800 text-white rounded-lg font-semibold text-lg transition-colors shadow-md">
+            Try Again
+        </button>
+    </div>
+</div>
+
+<footer class="w-full py-4 text-center text-slate-400 text-sm mt-auto">
+    &copy; 2026 Livex Solutions. All rights reserved.
+</footer>
+
+<script>
+    // --- State Variables ---
+    const quotes = [
+        "The lived experience of an individual is invaluable. We strive to provide solutions that honor and incorporate these diverse perspectives. True understanding comes not just from textbooks, but from the reality of those who have walked the path.",
+        "Innovation thrives when diverse voices are heard. We believe that lived experience is the cornerstone of effective and empathetic problem-solving. By listening closely, we build better systems for everyone.",
+        "Expertise is often defined by academic achievement, but we recognize that navigating complex systems firsthand builds a unique and powerful expertise of its own. Lived experience experts are essential to our mission.",
+        "Empathy is the bridge between knowledge and action. When we center the voices of lived experience experts, we transform theoretical frameworks into practical, meaningful solutions that actually work.",
+        "A system designed without the input of those it serves is bound to fail. Our approach ensures that lived experience is not an afterthought, but the foundation upon which we build sustainable solutions."
+    ];
+
+    let currentQuote = "";
+    let characterElements = [];
+    let currentIndex = 0;
+    
+    let isTestRunning = false;
+    let timerInterval = null;
+    
+    let selectedDuration = 60; // Default to 1 minute (in seconds)
+    let timeRemaining = selectedDuration;
+    
+    let correctChars = 0;
+    let incorrectChars = 0;
+    let totalKeystrokes = 0;
+
+    // --- DOM Elements ---
+    const quoteDisplay = document.getElementById('quote-display');
+    const hiddenInput = document.getElementById('hidden-input');
+    const testContainer = document.getElementById('test-container');
+    const focusOverlay = document.getElementById('focus-overlay');
+    
+    const timeDisplay = document.getElementById('time-display');
+    const wpmDisplay = document.getElementById('wpm-display');
+    const accDisplay = document.getElementById('acc-display');
+    
+    const timeButtons = document.querySelectorAll('.time-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    
+    const resultsModal = document.getElementById('results-modal');
+    const resultsContent = document.getElementById('results-content');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const finalWpm = document.getElementById('final-wpm');
+    const finalAcc = document.getElementById('final-acc');
+    const finalTimeText = document.getElementById('final-time-text');
+    const finalCorrectChars = document.getElementById('final-correct-chars');
+    const finalIncorrectChars = document.getElementById('final-incorrect-chars');
+
+    // --- Initialization Functions ---
+    function getRandomQuote() {
+        // Simple word generator for longer tests to ensure we don't run out of text easily
+        let longText = "";
+        for(let i=0; i<10; i++) {
+             const randomIdx = Math.floor(Math.random() * quotes.length);
+             longText += quotes[randomIdx] + " ";
+        }
+        return longText.trim();
+    }
+
+    function initTest() {
+        // Reset state
+        isTestRunning = false;
+        clearInterval(timerInterval);
+        currentIndex = 0;
+        correctChars = 0;
+        incorrectChars = 0;
+        totalKeystrokes = 0;
+        timeRemaining = selectedDuration;
+
+        // Update UI
+        updateTimeDisplay();
+        wpmDisplay.innerText = "0";
+        accDisplay.innerText = "100%";
+        hiddenInput.value = "";
+        
+        // Generate and render new text
+        currentQuote = getRandomQuote();
+        renderQuote(currentQuote);
+        
+        // Ensure container is focused and ready
+        testContainer.focus();
+        updateFocusState();
+    }
+
+    function renderQuote(text) {
+        quoteDisplay.innerHTML = '';
+        characterElements = [];
+
+        // Split text into individual characters and wrap in spans
+        text.split('').forEach((char, index) => {
+            const charSpan = document.createElement('span');
+            charSpan.innerText = char;
+            charSpan.classList.add('char');
+            // Initial cursor position
+            if (index === 0) charSpan.classList.add('current-char');
+            
+            quoteDisplay.appendChild(charSpan);
+            characterElements.push(charSpan);
+        });
+        
+        // Scroll to top
+        quoteDisplay.scrollTop = 0;
+    }
+
+    // --- Logic & Event Handlers ---
+    function handleTyping(e) {
+        if (!isFocused()) return;
+        
+        // Ignore modifier keys that don't produce characters
+        if (["Shift", "Meta", "Control", "Alt", "Tab", "Enter", "Escape"].includes(e.key)) return;
+
+        // Start test on first keypress
+        if (!isTestRunning && e.key !== "Backspace") {
+            startTest();
+        }
+
+        const currentCharElement = characterElements[currentIndex];
+        const expectedChar = currentQuote[currentIndex];
+
+        if (e.key === 'Backspace') {
+            handleBackspace();
+            return;
+        }
+
+        // Ignore input if we've reached the end
+        if (currentIndex >= currentQuote.length) return;
+
+        totalKeystrokes++;
+
+        // Check if typed character matches expected
+        if (e.key === expectedChar) {
+            currentCharElement.classList.add('correct');
+            currentCharElement.classList.remove('incorrect', 'current-char');
+            correctChars++;
+        } else {
+            // Visual feedback for space
+            if (expectedChar === ' ') {
+                 currentCharElement.style.backgroundColor = '#fee2e2'; // Light red bg
+            }
+            currentCharElement.classList.add('incorrect');
+            currentCharElement.classList.remove('current-char');
+            incorrectChars++;
+        }
+
+        // Move to next character
+        currentIndex++;
+        
+        // Update new cursor position
+        if (currentIndex < currentQuote.length) {
+            characterElements[currentIndex].classList.add('current-char');
+            
+            // Auto-scroll logic
+            autoScroll();
+        }
+
+        updateStats();
+    }
+
+    function handleBackspace() {
+        if (currentIndex > 0) {
+            // Remove cursor from current
+            if (currentIndex < currentQuote.length) {
+                characterElements[currentIndex].classList.remove('current-char');
+            }
+            
+            currentIndex--;
+            const prevCharElement = characterElements[currentIndex];
+            
+            // Revert stats
+            if (prevCharElement.classList.contains('correct')) {
+                correctChars--;
+            } else if (prevCharElement.classList.contains('incorrect')) {
+                incorrectChars--;
+            }
+            totalKeystrokes--;
+
+            // Reset visual state of the previous character
+            prevCharElement.classList.remove('correct', 'incorrect');
+            prevCharElement.style.backgroundColor = ''; // Reset space bg if any
+            prevCharElement.classList.add('current-char'); // Move cursor back
+            
+            autoScroll();
+        }
+    }
+
+    function autoScroll() {
+         const currentEl = characterElements[currentIndex];
+         if (!currentEl) return;
+         
+         // If cursor moves too far down, scroll the container
+         const containerRect = quoteDisplay.getBoundingClientRect();
+         const charRect = currentEl.getBoundingClientRect();
+         
+         if (charRect.bottom > containerRect.bottom - 20) {
+             quoteDisplay.scrollTop += 30; // Scroll down a line roughly
+         } else if (charRect.top < containerRect.top + 20) {
+             quoteDisplay.scrollTop -= 30;
+         }
+    }
+
+    function startTest() {
+        isTestRunning = true;
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            updateTimeDisplay();
+            updateStats(); // Update WPM dynamically
+
+            if (timeRemaining <= 0) {
+                endTest();
+            }
+        }, 1000);
+    }
+
+    function updateTimeDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timeDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateStats() {
+        // Calculate Accuracy
+        let accuracy = 100;
+        if (totalKeystrokes > 0) {
+            accuracy = Math.round((correctChars / totalKeystrokes) * 100);
+        }
+        accDisplay.innerText = `${accuracy}%`;
+
+        // Calculate WPM (Words Per Minute)
+        // Standard definition: 1 word = 5 characters
+        const timeElapsedSec = selectedDuration - timeRemaining;
+        let wpm = 0;
+        if (timeElapsedSec > 0) {
+            // Calculate gross WPM then subtract errors
+            const grossWpm = (totalKeystrokes / 5) / (timeElapsedSec / 60);
+            const netWpm = Math.max(0, grossWpm - (incorrectChars / (timeElapsedSec / 60)));
+            wpm = Math.round(netWpm);
+        }
+        wpmDisplay.innerText = wpm;
+        
+        return { wpm, accuracy };
+    }
+
+    function endTest() {
+        clearInterval(timerInterval);
+        isTestRunning = false;
+        
+        // Remove focus
+        hiddenInput.blur();
+        
+        // Calculate final stats
+        const finalStats = updateStats();
+        
+        // Populate modal
+        finalWpm.innerText = finalStats.wpm;
+        finalAcc.innerText = `${finalStats.accuracy}%`;
+        finalCorrectChars.innerText = correctChars;
+        finalIncorrectChars.innerText = incorrectChars;
+        
+        const mins = selectedDuration / 60;
+        finalTimeText.innerText = `${mins} Minute${mins > 1 ? 's' : ''} Test`;
+
+        // Show Modal with animation
+        resultsModal.classList.remove('hidden');
+        // Small delay to allow display:block to apply before animating opacity
+        setTimeout(() => {
+            resultsModal.classList.remove('opacity-0');
+            resultsContent.classList.remove('scale-95');
+        }, 10);
+    }
+
+    // --- Focus Management ---
+    function updateFocusState() {
+        if (document.activeElement === testContainer || document.activeElement === hiddenInput) {
+            testContainer.classList.remove('is-unfocused');
+            quoteDisplay.classList.remove('blur-filter');
+            hiddenInput.focus(); // Keep mobile input focused
+        } else {
+            testContainer.classList.add('is-unfocused');
+            quoteDisplay.classList.add('blur-filter');
+            if(isTestRunning) {
+                // Pause timer visually (actual pause logic could be added, but usually tests keep running)
+                // For simplicity, we just blur it.
+            }
+        }
+    }
+    
+    function isFocused() {
+        return !testContainer.classList.contains('is-unfocused');
+    }
+
+    // --- Event Listeners ---
+    
+    // Keyboard Input (Desktop)
+    document.addEventListener('keydown', (e) => {
+        // Prevent default browser behavior for certain keys when focused (like space scrolling down)
+        if (isFocused() && (e.key === " " || e.key === "Backspace")) {
+            e.preventDefault();
+        }
+        
+        if (document.activeElement !== hiddenInput && isFocused()) {
+            handleTyping(e);
+        }
+    });
+
+    // Mobile Input via hidden field
+    hiddenInput.addEventListener('input', (e) => {
+         // The hidden input receives the whole string, we just want the last char
+         // It's trickier on mobile due to autocomplete/autocorrect.
+         // We'll simulate keydown for simplicity
+         const val = hiddenInput.value;
+         if (val.length > 0) {
+             const lastChar = val[val.length - 1];
+             const mockEvent = { key: lastChar, preventDefault: ()=>{} };
+             handleTyping(mockEvent);
+             // Clear it to keep it clean
+             setTimeout(() => hiddenInput.value = "", 10);
+         }
+    });
+    
+    // Handle mobile backspace (input event doesn't fire on empty backspace easily)
+    hiddenInput.addEventListener('keydown', (e) => {
+         if (e.key === 'Backspace') {
+             handleTyping(e);
+         }
+    });
+
+    // Focus handling
+    testContainer.addEventListener('click', () => {
+        hiddenInput.focus();
+        updateFocusState();
+    });
+    
+    focusOverlay.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent double triggering
+        hiddenInput.focus();
+        updateFocusState();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!testContainer.contains(e.target) && e.target !== restartBtn) {
+            // Clicked outside
+            hiddenInput.blur();
+            updateFocusState();
+        }
+    });
+
+    // Time Selection
+    timeButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Update styling
+            timeButtons.forEach(b => {
+                b.classList.remove('bg-livex-red', 'text-white');
+                b.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+            e.target.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            e.target.classList.add('bg-livex-red', 'text-white');
+
+            // Update duration and restart
+            selectedDuration = parseInt(e.target.getAttribute('data-time'));
+            initTest();
+        });
+    });
+
+    // Restart Button
+    restartBtn.addEventListener('click', initTest);
+
+    // Close Modal
+    closeModalBtn.addEventListener('click', () => {
+        resultsModal.classList.add('opacity-0');
+        resultsContent.classList.add('scale-95');
+        setTimeout(() => {
+            resultsModal.classList.add('hidden');
+            initTest();
+        }, 300); // Wait for transition
+    });
+
+    // Initialize on load
+    window.onload = () => {
+        initTest();
+        // Force focus initially
+        hiddenInput.focus();
+        updateFocusState();
+    };
+
+</script>
+</body>
+</html>
